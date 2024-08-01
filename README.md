@@ -15,7 +15,9 @@ This script adds advanced image effects to the Stable Diffusion Web UI, allowing
 - Option to save original images
 
 ## Installation
+Main installation method should soon be the extension panel of automatic1111.
 
+But for now:
 1. Clone this repository or download the script.
 2. Place the script in the `extension` folder of your Stable Diffusion Web UI installation.
 3. (Optional) Add overlays to the `overlays` folder in the same directory as the script and add any overlay images you want to use.
