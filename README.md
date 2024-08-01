@@ -1,9 +1,9 @@
-# a1111-Advanced-Image-Effects
+# a1111-Some-Image-Effects
 Adds post-processing image effects to Stable Diffusion outputs, creating a vintage aesthetic. Grain, vignette, random blur, color offset, and customizable overlays like light leaks.
 
-# Advanced Image Effects for Stable Diffusion Web UI
+# Some Image Effects for Stable Diffusion Web UI
 
-This script adds advanced image effects to the Stable Diffusion Web UI, allowing users to apply various post-processing effects to generated images.
+This script adds some image effects to the Stable Diffusion Web UI, allowing users to apply various post-processing effects to generated images.
 
 ## Features
 
@@ -25,13 +25,13 @@ But for now:
 ## Usage
 
 1. Run the Stable Diffusion Web UI.
-2. In the "Script" dropdown menu, select "Advanced Image Effects".
+2. In the "Script" dropdown menu, select "Some Image Effects".
 3. Adjust the settings for the desired effects.
 4. Generate your image as usual.
 
 ## Effect Examples
 
-Here are some general examples of how the Advanced Image Effects can transform your generated images:
+Here are some general examples of how the Some Image Effects can transform your generated images:
 
 Before | After
 -------|------
