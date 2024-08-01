@@ -3,7 +3,7 @@ import gradio as gr
 from modules import images, shared
 from modules.processing import process_images, Processed
 from modules.shared import opts, state
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageChops
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageChops, ImageOps
 import numpy as np
 import random
 import os
@@ -41,7 +41,7 @@ class SomeImageEffectsScript(scripts.Script):
         return any(filename.lower().endswith(ext) for ext in image_extensions)
 
     def title(self):
-        return "Some Image Effects"
+        return "Advanced Image Effects"
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
@@ -56,7 +56,7 @@ class SomeImageEffectsScript(scripts.Script):
                     enable_vignette = gr.Checkbox(label="Enable Vignette", value=False)
                     enable_random_blur = gr.Checkbox(label="Enable Random Blur", value=False)
                     enable_color_offset = gr.Checkbox(label="Enable Color Offset", value=False)
-                
+                      
                 with gr.Row():
                     grain_intensity = gr.Slider(minimum=0.0, maximum=1.0, step=0.05, value=0.3, label="Grain Intensity")
                 
@@ -80,12 +80,34 @@ class SomeImageEffectsScript(scripts.Script):
                 
                 with gr.Row():
                     overlay_opacity = gr.Slider(minimum=0.0, maximum=1.0, step=0.05, value=0.5, label="Overlay Opacity")
-                    overlay_blend_mode = gr.Dropdown(label="Overlay Blend Mode", choices=["normal", "multiply", "add", "lighten"], value="normal")
+                    overlay_blend_mode = gr.Dropdown(label="Overlay Blend Mode", choices=[
+                        "normal", "multiply", "screen", "overlay", "darken", "lighten",
+                        "color_dodge", "color_burn", "hard_light", "soft_light", "difference",
+                        "exclusion", "hue", "saturation", "color", "luminosity"
+                    ], value="normal")
+
+                with gr.Row():
+                    enable_luminosity = gr.Checkbox(label="Enable Luminosity Adjustment", value=False)
+                    luminosity_factor = gr.Slider(minimum=-1.0, maximum=1.0, step=0.05, value=0, label="Luminosity Factor")
+
+                with gr.Row():
+                    enable_contrast = gr.Checkbox(label="Enable Contrast Adjustment", value=False)
+                    contrast_factor = gr.Slider(minimum=0.0, maximum=2.0, step=0.05, value=1, label="Contrast Factor")
+
+                with gr.Row():
+                    enable_hue = gr.Checkbox(label="Enable Hue Adjustment", value=False)
+                    hue_factor = gr.Slider(minimum=-180, maximum=180, step=1, value=0, label="Hue Shift")
+
+                with gr.Row():
+                    enable_saturation = gr.Checkbox(label="Enable Saturation Adjustment", value=False)
+                    saturation_factor = gr.Slider(minimum=0.0, maximum=2.0, step=0.05, value=1, label="Saturation Factor")
 
         return [save_original, enable_grain, enable_vignette, enable_random_blur, enable_color_offset,
                 grain_intensity, vignette_intensity, vignette_feather, vignette_roundness,
                 blur_max_size, blur_strength, color_offset_x, color_offset_y,
-                enable_overlay, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode]
+                enable_overlay, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode,
+                enable_luminosity, luminosity_factor, enable_contrast, contrast_factor,
+                enable_hue, hue_factor, enable_saturation, saturation_factor]
 
     def process(self, p, *args):
         enabled_effects = []
@@ -99,15 +121,26 @@ class SomeImageEffectsScript(scripts.Script):
             enabled_effects.append("Color Offset")
         if args[13]:  # enable_overlay
             enabled_effects.append("Overlay")
+        if args[18]:  # enable_luminosity
+            enabled_effects.append("Luminosity")
+        if args[20]:  # enable_contrast
+            enabled_effects.append("Contrast")
+        if args[22]:  # enable_hue
+            enabled_effects.append("Hue")
+        if args[24]:  # enable_saturation
+            enabled_effects.append("Saturation")
         
         if enabled_effects:
             p.extra_generation_params["Some Image Effects"] = ", ".join(enabled_effects)
 
+ 
     def postprocess_image(self, p, pp, *args):
         save_original, enable_grain, enable_vignette, enable_random_blur, enable_color_offset, \
         grain_intensity, vignette_intensity, vignette_feather, vignette_roundness, \
         blur_max_size, blur_strength, color_offset_x, color_offset_y, \
-        enable_overlay, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode = args
+        enable_overlay, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode, \
+        enable_luminosity, luminosity_factor, enable_contrast, contrast_factor, \
+        enable_hue, hue_factor, enable_saturation, saturation_factor = args
 
         if hasattr(pp, 'image'):
             if save_original:
@@ -118,6 +151,7 @@ class SomeImageEffectsScript(scripts.Script):
                 if save_original:
                     self.save_original_image(image)
                 pp.images[i] = self.add_effects(image, *args)
+
 
     def add_effects(self, img, save_original, enable_grain, enable_vignette, enable_random_blur, enable_color_offset,
                     grain_intensity, vignette_intensity, vignette_feather, vignette_roundness,
@@ -242,21 +276,66 @@ class SomeImageEffectsScript(scripts.Script):
         if img.mode != 'RGBA':
             img = img.convert('RGBA')
         
+        # Apply blend mode
+        if img.mode != 'RGBA':
+            img = img.convert('RGBA')
+        
         if blend_mode == "multiply":
             blended = ImageChops.multiply(img, overlay)
-        elif blend_mode == "add":
-            blended = ImageChops.add(img, overlay, scale=2.0)
+        elif blend_mode == "screen":
+            blended = ImageChops.screen(img, overlay)
+        elif blend_mode == "overlay":
+            blended = self.overlay_blend(img, overlay)
+        elif blend_mode == "darken":
+            blended = ImageChops.darker(img, overlay)
         elif blend_mode == "lighten":
             blended = ImageChops.lighter(img, overlay)
+        elif blend_mode == "color_dodge":
+            blended = self.color_dodge(img, overlay)
+        elif blend_mode == "color_burn":
+            blended = self.color_burn(img, overlay)
+        elif blend_mode == "hard_light":
+            blended = self.hard_light(img, overlay)
+        elif blend_mode == "soft_light":
+            blended = self.soft_light(img, overlay)
+        elif blend_mode == "difference":
+            blended = ImageChops.difference(img, overlay)
+        elif blend_mode == "exclusion":
+            blended = self.exclusion(img, overlay)
+        elif blend_mode == "hue":
+            blended = self.hue_blend(img, overlay)
+        elif blend_mode == "saturation":
+            blended = self.saturation_blend(img, overlay)
+        elif blend_mode == "color":
+            blended = self.color_blend(img, overlay)
+        elif blend_mode == "luminosity":
+            blended = self.luminosity_blend(img, overlay)
         else:  # normal
             blended = Image.alpha_composite(img, overlay)
 
         return blended.convert("RGB")
 
+    def adjust_luminosity(self, img, factor):
+        return ImageEnhance.Brightness(img).enhance(1 + factor)
+
+    def adjust_contrast(self, img, factor):
+        return ImageEnhance.Contrast(img).enhance(factor)
+
+    def adjust_hue(self, img, shift):
+        img = img.convert('HSV')
+        h, s, v = img.split()
+        h = h.point(lambda x: (x + shift) % 256)
+        return Image.merge('HSV', (h, s, v)).convert('RGB')
+
+    def adjust_saturation(self, img, factor):
+        return ImageEnhance.Color(img).enhance(factor)
+
     def add_effects(self, img, save_original, enable_grain, enable_vignette, enable_random_blur, enable_color_offset,
                     grain_intensity, vignette_intensity, vignette_feather, vignette_roundness,
                     blur_max_size, blur_strength, color_offset_x, color_offset_y,
-                    enable_overlay, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode):
+                    enable_overlay, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode,
+                    enable_luminosity, luminosity_factor, enable_contrast, contrast_factor,
+                    enable_hue, hue_factor, enable_saturation, saturation_factor):
         if img is None:
             print("Error: Input image is None")
             return None
@@ -275,6 +354,18 @@ class SomeImageEffectsScript(scripts.Script):
         
         if enable_overlay and overlay_file:
             img = self.add_overlay(img, overlay_file, overlay_fit, overlay_opacity, overlay_blend_mode)
+        
+        if enable_luminosity:
+            img = self.adjust_luminosity(img, luminosity_factor)
+        
+        if enable_contrast:
+            img = self.adjust_contrast(img, contrast_factor)
+        
+        if enable_hue:
+            img = self.adjust_hue(img, hue_factor)
+        
+        if enable_saturation:
+            img = self.adjust_saturation(img, saturation_factor)
         
         return img
 
