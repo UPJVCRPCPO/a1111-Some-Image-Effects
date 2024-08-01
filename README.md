@@ -35,7 +35,6 @@ Here are some general examples of how the Advanced Image Effects can transform y
 
 Before | After
 -------|------
-![Alt text](example/image1.png) | ![Alt text](example/image2.png)
 ![Alt text](example/image3.png) | ![Alt text](example/image4.png)
 ![Alt text](example/image5.png) | ![Alt text](example/image6.png)
 
