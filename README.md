@@ -34,8 +34,8 @@ Here are some general examples of how the Advanced Image Effects can transform y
 Before | After
 -------|------
 ![Alt text](example/image1.png) | ![Alt text](example/image2.png)
-[Placeholder for original image] | [Placeholder for image with different effects applied]
-[Placeholder for original image] | [Placeholder for image with another combination of effects]
+![Alt text](example/image3.png) | ![Alt text](example/image4.png)
+![Alt text](example/image5.png) | ![Alt text](example/image6.png)
 
 ## Settings
 
