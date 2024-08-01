@@ -8,7 +8,7 @@ import numpy as np
 import random
 import os
 
-class AdvancedImageEffectsScript(scripts.Script):
+class SomeImageEffectsScript(scripts.Script):
     def __init__(self):
         super().__init__()
         self.overlay_files = []
@@ -41,14 +41,14 @@ class AdvancedImageEffectsScript(scripts.Script):
         return any(filename.lower().endswith(ext) for ext in image_extensions)
 
     def title(self):
-        return "Advanced Image Effects"
+        return "Some Image Effects"
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
     def ui(self, is_img2img):
         with gr.Group():
-            with gr.Accordion("Advanced Image Effects", open=False):
+            with gr.Accordion("Some Image Effects", open=False):
                 save_original = gr.Checkbox(label="Save Original Image", value=True)
                 
                 with gr.Row():
@@ -101,7 +101,7 @@ class AdvancedImageEffectsScript(scripts.Script):
             enabled_effects.append("Overlay")
         
         if enabled_effects:
-            p.extra_generation_params["Advanced Image Effects"] = ", ".join(enabled_effects)
+            p.extra_generation_params["Some Image Effects"] = ", ".join(enabled_effects)
 
     def postprocess_image(self, p, pp, *args):
         save_original, enable_grain, enable_vignette, enable_random_blur, enable_color_offset, \
